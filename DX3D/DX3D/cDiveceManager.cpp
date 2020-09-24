@@ -11,13 +11,9 @@ cDiveceManager::cDiveceManager() :
 	int nVertexProcessing;
 	m_p3D->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &stCaps);
 	if (stCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
-	{
 		nVertexProcessing = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-	}
 	else
-	{
 		nVertexProcessing = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-	}
 
 	D3DPRESENT_PARAMETERS stD3DPP;
 	ZeroMemory(&stD3DPP, sizeof(D3DPRESENT_PARAMETERS));
