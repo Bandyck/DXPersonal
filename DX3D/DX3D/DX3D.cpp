@@ -27,6 +27,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
     if (!InitInstance (hInstance, nCmdShow))
     {	return FALSE;    }
+
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_DX3D));
 	
 	// >> :
 	g_pMainGame = new cMainGame;
@@ -40,7 +42,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 		if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
 			if (msg.message == WM_QUIT)
+			{
 				break;
+			}
 			else
 			{
 				TranslateMessage(&msg);
@@ -53,7 +57,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 			g_pMainGame->Render();
 		}
     }
+
 	SafeDelete(g_pMainGame);
+
     return (int) msg.wParam;
 }
 ATOM MyRegisterClass(HINSTANCE hInstance)
@@ -89,6 +95,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 }
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	if (g_pMainGame)
+		g_pMainGame->WndProc(hWnd, message, wParam, lParam);
     switch (message)
     {
     case WM_PAINT:
