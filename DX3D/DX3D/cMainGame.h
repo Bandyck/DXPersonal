@@ -2,9 +2,10 @@
 class cCubePC;
 class cCamera;
 class cGrid;
-class cHead;
-class cBody;
-class cLimb;
+class cCubeMan;
+//class cHead;
+//class cBody;
+//class cLimb;
 
 class cMainGame
 {
@@ -26,13 +27,20 @@ private:
 	vector<ST_PC_VERTEX>	m_vecLineVertex;
 	vector<ST_PC_VERTEX>	m_vecTriangleVertex;
 	
-	//cCubePC*				m_pCubePC;
-	cHead*					m_pHead;
-	cBody*					m_pBody;
-	cLimb*					m_pLimb;
+	cCubePC*				m_pCubePC;
 	cCamera*				m_pCamera;
 	cGrid*					m_pGrid;
+	cCubeMan*				m_pCubeMan;
 
+	// >> : for texture
+	LPDIRECT3DTEXTURE9		m_pTexture;
+	vector<ST_PT_VERTEX>	m_vecVertex;
+	// << : 
+
+	/// 내 코드
+	//cHead*					m_pHead;
+	//cBody*					m_pBody;
+	//cLimb*					m_pLimb;
 
 public:
 	void Setup();
@@ -40,6 +48,8 @@ public:
 	void Render();
 	void WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+	void Set_Light();
+	void Draw_Texture();
 	/// 내 선언
 	//{
 	//	void Setup_Line();

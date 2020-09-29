@@ -4,25 +4,30 @@
 #include "cCamera.h"
 #include "cCubePC.h"
 #include "cGrid.h"
-#include "cHead.h"
-#include "cBody.h"
-#include "cLimb.h"
+#include "cCubeMan.h"
+//#include "cHead.h"
+//#include "cBody.h"
+//#include "cLimb.h"
 
 cMainGame::cMainGame() 
-	: /*m_pCubePC(NULL)*/
-	  m_pHead(NULL)
+	: m_pCubePC(NULL)
 	, m_pCamera(NULL)
 	, m_pGrid(NULL)
-	, m_pLimb(NULL)
+	, m_pCubeMan(NULL)
+	, m_pTexture(NULL)
+	//, m_pHead(NULL)
+	//, m_pLimb(NULL)
 {
 }
 cMainGame::~cMainGame()
 {
-	//SafeDelete(m_pCubePC);
-	SafeDelete(m_pHead);
+	SafeDelete(m_pCubePC);
 	SafeDelete(m_pCamera);
 	SafeDelete(m_pGrid);
+	SafeDelete(m_pCubeMan);
+	SafeRelease(m_pTexture);
 	g_pDeviceManager->Destroy();
+	//SafeDelete(m_pHead);
 }
 /// 내 셋업
 //void cMainGame::Setup()
@@ -75,25 +80,48 @@ void cMainGame::Setup()
 	//Setup_Axis();
 	//Setup_Cube();
 	//Setup_Triangle();
+	//m_pHead = new cHead;
+	//m_pHead->Setup();
+	//m_pBody = new cBody;
+	//m_pBody->Setup();
+	//m_pLimb = new cLimb;
+	//m_pLimb->Setup();
 
-	//m_pCubePC = new cCubePC;
-	//m_pCubePC->Setup();
+	m_pCubePC = new cCubePC;
+	m_pCubePC->Setup();
 
-	m_pHead = new cHead;
-	m_pHead->Setup();
-	m_pBody = new cBody;
-	m_pBody->Setup();
-	m_pLimb = new cLimb;
-	m_pLimb->Setup();
+	m_pCubeMan = new cCubeMan;
+	m_pCubeMan->Setup();
+
 	m_pCamera = new cCamera;
-	m_pCamera->Setup(&m_pHead->GetPosition());
-	//m_pCamera->Setup(&m_pCubePC->GetPosition());
+	m_pCamera->Setup(&m_pCubeMan->GetPosition());
+	// m_pCamera->Setup(&m_pCubePC->GetPosition());
+	// m_pCamera->Setup(&m_pHead->GetPosition());
 
 	m_pGrid = new cGrid;
 	m_pGrid->Setup();
 
+	// >> : for texture
+	{
+		D3DXCreateTextureFromFile(g_pD3DDevice, L"수지.bmp", &m_pTexture);
+		ST_PT_VERTEX v;
+		v.p = D3DXVECTOR3(0, 0, 0);
+		v.t = D3DXVECTOR2(0, 1);
+		m_vecVertex.push_back(v);
+
+		v.p = D3DXVECTOR3(0, 1, 0);
+		v.t = D3DXVECTOR2(0, 0);
+		m_vecVertex.push_back(v);
+
+		v.p = D3DXVECTOR3(1, 1, 0);
+		v.t = D3DXVECTOR2(1, 0);
+		m_vecVertex.push_back(v);
+
+	}
+	// << :
+	Set_Light();
 	// 조명 끄기
-	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, false);
+	// g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, false);
 }
 void cMainGame::Update()
 {
@@ -108,15 +136,17 @@ void cMainGame::Update()
 	//D3DXMATRIXA16 matProj;
 	//D3DXMatrixPerspectiveFovLH(&matProj, D3DX_PI / 4.0f, rc.right / (float)rc.bottom, 1.0f, 1000.0f);
 	//g_pD3DDevice->SetTransform(D3DTS_PROJECTION, &matProj);
-
 	//if (m_pCubePC)
 	//	m_pCubePC->Update();
-	if (m_pHead)
-		m_pHead->Update();
-	if (m_pBody)
-		m_pBody->Update();
-	if (m_pLimb)
-		m_pLimb->Update();
+	//if (m_pHead)
+	//	m_pHead->Update();
+	//if (m_pBody)
+	//	m_pBody->Update();
+	//if (m_pLimb)
+	//	m_pLimb->Update();
+
+	if (m_pCubeMan)
+		m_pCubeMan->Update();
 	if (m_pCamera)
 		m_pCamera->Update();
 }
@@ -130,17 +160,20 @@ void cMainGame::Render()
 	//Draw_Axis();
 	//Draw_Cube();
 	//Draw_Triangle();
-	if (m_pGrid)
-		m_pGrid->Render();
 	//if (m_pCubePC)
 	//	m_pCubePC->Render();
-	if (m_pLimb)
-		m_pLimb->Render();
-	if (m_pBody)
-		m_pBody->Render();
-	if (m_pHead)
-		m_pHead->Render();
+	//if (m_pLimb)
+	//	m_pLimb->Render();
+	//if (m_pBody)
+	//	m_pBody->Render();
+	//if (m_pHead)
+	//	m_pHead->Render();
 
+	if (m_pGrid)
+		m_pGrid->Render();
+	Draw_Texture();
+	//if (m_pCubeMan)
+	//	m_pCubeMan->Render();
 
 	g_pD3DDevice->EndScene();
 
@@ -150,6 +183,34 @@ void cMainGame::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (m_pCamera)
 		m_pCamera->WndProc(hWnd, message, wParam, lParam);
+}
+void cMainGame::Set_Light()
+{
+	D3DLIGHT9	stLight;
+	ZeroMemory(&stLight, sizeof(D3DLIGHT9));
+	stLight.Type = D3DLIGHT_DIRECTIONAL;
+	stLight.Ambient = D3DXCOLOR(0.8F, 0.8F, 0.8F, 1.0F);
+	stLight.Diffuse = D3DXCOLOR(0.8F, 0.8F, 0.8F, 1.0F);
+	stLight.Specular = D3DXCOLOR(0.8F, 0.8F, 0.8F, 1.0F);
+
+	D3DXVECTOR3 vDir(1.0f, -1.0f, 1.0f);
+	D3DXVec3Normalize(&vDir, &vDir);
+	stLight.Direction = vDir;
+	g_pD3DDevice->SetLight(0, &stLight);
+	g_pD3DDevice->LightEnable(0, true);
+}
+void cMainGame::Draw_Texture()
+{
+	g_pD3DDevice->SetRenderState(D3DRS_LIGHTING, false);
+
+	D3DXMATRIXA16 matWorld;
+	D3DXMatrixIdentity(&matWorld);
+	g_pD3DDevice->SetTransform(D3DTS_WORLD, &matWorld);
+	g_pD3DDevice->SetTexture(0, m_pTexture);
+	g_pD3DDevice->SetFVF(ST_PT_VERTEX::FVF);
+	g_pD3DDevice->DrawPrimitiveUP(D3DPT_TRIANGLELIST, m_vecVertex.size() / 3, &m_vecVertex[0], sizeof(ST_PT_VERTEX));
+	// 텍스쳐값 다시 초기화
+	g_pD3DDevice->SetTexture(0, NULL);
 }
 //void cMainGame::Setup_Line()
 //{
